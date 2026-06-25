@@ -2,6 +2,8 @@ import React from 'react';
 import { View, TextInput, StyleSheet, Text } from 'react-native';
 import { VoiceButton } from './VoiceButton';
 import { AppConstants } from '../core/constants';
+import { Language } from '../core/types';
+import { t } from '../core/i18n';
 
 interface TextInputCardProps {
   value: string;
@@ -9,7 +11,7 @@ interface TextInputCardProps {
   isListening: boolean;
   partialSttResult: string;
   onMicPress: () => void;
-  sourceLanguage: string;
+  sourceLanguage: Language;
 }
 
 export const TextInputCard: React.FC<TextInputCardProps> = ({
@@ -20,14 +22,10 @@ export const TextInputCard: React.FC<TextInputCardProps> = ({
   onMicPress,
   sourceLanguage,
 }) => {
-  const idlePlaceholder =
-    sourceLanguage === 'id' ? 'Ketik atau bicara...' : 'Type or speak...';
-  const listeningPlaceholder =
-    sourceLanguage === 'id' ? 'Mendengarkan...' : 'Listening...';
-
+  const s = t(sourceLanguage);
   const placeholder = isListening
-    ? partialSttResult || listeningPlaceholder
-    : idlePlaceholder;
+    ? partialSttResult || s.listening
+    : s.typeOrSpeak;
 
   return (
     <View style={styles.card}>

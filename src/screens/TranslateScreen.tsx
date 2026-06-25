@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTranslationStore } from '../store/translationStore';
 import { useModelStore } from '../store/modelStore';
 import { AppConstants } from '../core/constants';
+import { t } from '../core/i18n';
 import { LanguageSelector } from '../components/LanguageSelector';
 import { TextInputCard } from '../components/TextInputCard';
 import { TranslationResultCard } from '../components/TranslationResultCard';
@@ -46,6 +47,7 @@ export const TranslateScreen: React.FC<TranslateScreenProps> = ({
     clearError,
   } = useTranslationStore();
 
+  const s = t(sourceLanguage);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Initialize model on mount
@@ -56,7 +58,7 @@ export const TranslateScreen: React.FC<TranslateScreenProps> = ({
   // Show error alert
   useEffect(() => {
     if (error) {
-      Alert.alert('Error', error, [{ text: 'OK', onPress: clearError }]);
+      Alert.alert(s.error, error, [{ text: s.ok, onPress: clearError }]);
     }
   }, [error]);
 
@@ -74,7 +76,6 @@ export const TranslateScreen: React.FC<TranslateScreenProps> = ({
           translateText(text);
         }, AppConstants.debounceMs);
       } else {
-        // Clear result when input is empty
         useTranslationStore.setState({ result: null });
       }
     },
@@ -98,11 +99,8 @@ export const TranslateScreen: React.FC<TranslateScreenProps> = ({
   }, [isSpeaking, speakResult, stopSpeaking]);
 
   const handleCopy = useCallback(() => {
-    // Feedback handled via Alert
-    Alert.alert('Copied', 'Translation copied to clipboard', [
-      { text: 'OK' },
-    ]);
-  }, []);
+    Alert.alert(s.copied, s.copiedMessage, [{ text: s.ok }]);
+  }, [s]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -110,7 +108,7 @@ export const TranslateScreen: React.FC<TranslateScreenProps> = ({
 
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>{AppConstants.appName}</Text>
+        <Text style={styles.title}>TransLite</Text>
         <TouchableOpacity
           onPress={onOpenSettings}
           style={styles.settingsButton}
@@ -156,7 +154,7 @@ export const TranslateScreen: React.FC<TranslateScreenProps> = ({
             isSpeaking={isSpeaking}
             onCopy={handleCopy}
             onSpeak={handleSpeak}
-            targetLanguage={targetLanguage}
+            sourceLanguage={sourceLanguage}
           />
         </ScrollView>
       </KeyboardAvoidingView>

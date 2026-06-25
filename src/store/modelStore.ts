@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ModelType, DownloadStatus } from '../core/types';
 import { translationService } from '../services/translationService';
 
@@ -15,68 +17,87 @@ interface ModelState {
   deleteModel: (type: ModelType) => Promise<void>;
 }
 
-export const useModelStore = create<ModelState>((set, get) => ({
-  activeModel: null,
-  lightStatus: DownloadStatus.IDLE,
-  fullStatus: DownloadStatus.IDLE,
-  downloadProgress: 0,
-  errorMessage: null,
-
-  checkInstalledModels: async () => {
-    // Since we use API-based translation, mark light model as "ready"
-    // immediately so users can start translating without downloading anything.
-    set({
-      lightStatus: DownloadStatus.DOWNLOADED,
+export const useModelStore = create<ModelState>()(
+  persist(
+    (set, get) => ({
+      activeModel: null,
+      lightStatus: DownloadStatus.IDLE,
       fullStatus: DownloadStatus.IDLE,
-      activeModel: ModelType.LIGHT,
-    });
+      downloadProgress: 0,
+      errorMessage: null,
 
-    // Initialize the translation service
-    await translationService.loadModel();
-  },
+      checkInstalledModels: async () => {
+        const { activeModel, lightStatus, fullStatus } = get();
 
-  downloadModel: async (type: ModelType) => {
-    try {
-      const statusKey =
-        type === ModelType.LIGHT ? 'lightStatus' : 'fullStatus';
+        // If already has a persisted active model, just load service
+        if (activeModel) {
+          await translationService.loadModel();
+          return;
+        }
 
-      set({
-        [statusKey]: DownloadStatus.DOWNLOADING,
-        downloadProgress: 0,
-        errorMessage: null,
-      } as any);
+        // First time: mark light as ready (API-based, no real download needed)
+        set({
+          lightStatus: DownloadStatus.DOWNLOADED,
+          fullStatus: DownloadStatus.IDLE,
+          activeModel: ModelType.LIGHT,
+        });
+        await translationService.loadModel();
+      },
 
-      // Simulate download progress
-      for (let i = 0; i <= 10; i++) {
-        await new Promise((resolve) => setTimeout(resolve, 150));
-        set({ downloadProgress: i / 10 });
-      }
+      downloadModel: async (type: ModelType) => {
+        try {
+          const statusKey =
+            type === ModelType.LIGHT ? 'lightStatus' : 'fullStatus';
 
-      // Load the translation service
-      await translationService.loadModel();
+          set({
+            [statusKey]: DownloadStatus.DOWNLOADING,
+            downloadProgress: 0,
+            errorMessage: null,
+          } as any);
 
-      set({
-        [statusKey]: DownloadStatus.DOWNLOADED,
-        activeModel: type,
-        downloadProgress: 1,
-      } as any);
-    } catch (e: any) {
-      const statusKey =
-        type === ModelType.LIGHT ? 'lightStatus' : 'fullStatus';
-      set({
-        [statusKey]: DownloadStatus.ERROR,
-        errorMessage: e.message || 'Download failed',
-      } as any);
+          // Simulate download progress
+          for (let i = 0; i <= 10; i++) {
+            await new Promise((resolve) => setTimeout(resolve, 150));
+            set({ downloadProgress: i / 10 });
+          }
+
+          await translationService.loadModel();
+
+          set({
+            [statusKey]: DownloadStatus.DOWNLOADED,
+            activeModel: type,
+            downloadProgress: 1,
+          } as any);
+        } catch (e: any) {
+          const statusKey =
+            type === ModelType.LIGHT ? 'lightStatus' : 'fullStatus';
+          set({
+            [statusKey]: DownloadStatus.ERROR,
+            errorMessage: e.message || 'Download failed',
+          } as any);
+        }
+      },
+
+      deleteModel: async (type: ModelType) => {
+        const statusKey =
+          type === ModelType.LIGHT ? 'lightStatus' : 'fullStatus';
+        const { activeModel } = get();
+
+        set({
+          [statusKey]: DownloadStatus.IDLE,
+          activeModel: activeModel === type ? null : activeModel,
+        } as any);
+      },
+    }),
+    {
+      name: 'translite-model-store',
+      storage: createJSONStorage(() => AsyncStorage),
+      // Only persist these fields (not transient state like progress/error)
+      partialize: (state) => ({
+        activeModel: state.activeModel,
+        lightStatus: state.lightStatus,
+        fullStatus: state.fullStatus,
+      }),
     }
-  },
-
-  deleteModel: async (type: ModelType) => {
-    const statusKey = type === ModelType.LIGHT ? 'lightStatus' : 'fullStatus';
-    const { activeModel } = get();
-
-    set({
-      [statusKey]: DownloadStatus.IDLE,
-      activeModel: activeModel === type ? null : activeModel,
-    } as any);
-  },
-}));
+  )
+);

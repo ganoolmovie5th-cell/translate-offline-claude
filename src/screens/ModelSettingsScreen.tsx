@@ -9,7 +9,9 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useModelStore } from '../store/modelStore';
+import { useTranslationStore } from '../store/translationStore';
 import { ModelType, ModelConfig, DownloadStatus } from '../core/types';
+import { t } from '../core/i18n';
 
 interface ModelSettingsScreenProps {
   onBack: () => void;
@@ -28,6 +30,9 @@ export const ModelSettingsScreen: React.FC<ModelSettingsScreenProps> = ({
     deleteModel,
   } = useModelStore();
 
+  const { sourceLanguage } = useTranslationStore();
+  const s = t(sourceLanguage);
+
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
@@ -35,15 +40,15 @@ export const ModelSettingsScreen: React.FC<ModelSettingsScreenProps> = ({
         <TouchableOpacity onPress={onBack} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#1f2937" />
         </TouchableOpacity>
-        <Text style={styles.title}>Language Models</Text>
+        <Text style={styles.title}>{s.languageModels}</Text>
         <View style={styles.placeholder} />
       </View>
 
       <View style={styles.content}>
         {/* Light Model */}
         <ModelCard
-          title="Light Model"
-          description={`Fast, smaller file (${ModelConfig[ModelType.LIGHT].sizeDescription})`}
+          title={s.lightModel}
+          description={`${s.lightDescription} (${ModelConfig[ModelType.LIGHT].sizeDescription})`}
           status={lightStatus}
           isActive={activeModel === ModelType.LIGHT}
           progress={
@@ -53,14 +58,15 @@ export const ModelSettingsScreen: React.FC<ModelSettingsScreenProps> = ({
           }
           onDownload={() => downloadModel(ModelType.LIGHT)}
           onDelete={() => deleteModel(ModelType.LIGHT)}
+          strings={s}
         />
 
         <View style={styles.spacer} />
 
         {/* Full Model */}
         <ModelCard
-          title="Full Model"
-          description={`Higher accuracy (${ModelConfig[ModelType.FULL].sizeDescription})`}
+          title={s.fullModel}
+          description={`${s.fullDescription} (${ModelConfig[ModelType.FULL].sizeDescription})`}
           status={fullStatus}
           isActive={activeModel === ModelType.FULL}
           progress={
@@ -70,6 +76,7 @@ export const ModelSettingsScreen: React.FC<ModelSettingsScreenProps> = ({
           }
           onDownload={() => downloadModel(ModelType.FULL)}
           onDelete={() => deleteModel(ModelType.FULL)}
+          strings={s}
         />
 
         {/* Error */}
@@ -87,10 +94,7 @@ export const ModelSettingsScreen: React.FC<ModelSettingsScreenProps> = ({
             size={18}
             color="#6b7280"
           />
-          <Text style={styles.infoText}>
-            Models are stored locally for offline translation. Download at least
-            one model to start translating.
-          </Text>
+          <Text style={styles.infoText}>{s.downloadInfo}</Text>
         </View>
       </View>
     </SafeAreaView>
@@ -107,6 +111,7 @@ interface ModelCardProps {
   progress?: number;
   onDownload: () => void;
   onDelete: () => void;
+  strings: ReturnType<typeof t>;
 }
 
 const ModelCard: React.FC<ModelCardProps> = ({
@@ -117,6 +122,7 @@ const ModelCard: React.FC<ModelCardProps> = ({
   progress,
   onDownload,
   onDelete,
+  strings: s,
 }) => {
   const renderAction = () => {
     switch (status) {

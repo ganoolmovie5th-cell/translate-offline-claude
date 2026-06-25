@@ -8,6 +8,8 @@ import {
 } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { Ionicons } from '@expo/vector-icons';
+import { Language } from '../core/types';
+import { t } from '../core/i18n';
 
 interface TranslationResultCardProps {
   translatedText: string | null;
@@ -15,7 +17,7 @@ interface TranslationResultCardProps {
   isSpeaking: boolean;
   onCopy: () => void;
   onSpeak: () => void;
-  targetLanguage: string;
+  sourceLanguage: Language;
 }
 
 export const TranslationResultCard: React.FC<TranslationResultCardProps> = ({
@@ -24,8 +26,10 @@ export const TranslationResultCard: React.FC<TranslationResultCardProps> = ({
   isSpeaking,
   onCopy,
   onSpeak,
-  targetLanguage,
+  sourceLanguage,
 }) => {
+  const s = t(sourceLanguage);
+
   const handleCopy = async () => {
     if (translatedText) {
       await Clipboard.setStringAsync(translatedText);
@@ -33,19 +37,12 @@ export const TranslationResultCard: React.FC<TranslationResultCardProps> = ({
     }
   };
 
-  const loadingText =
-    targetLanguage === 'id' ? 'Menerjemahkan...' : 'Translating...';
-  const placeholderText =
-    targetLanguage === 'id'
-      ? 'Terjemahan akan muncul di sini'
-      : 'Translation will appear here';
-
   return (
     <View style={styles.card}>
       {isLoading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="small" color="#0d9488" />
-          <Text style={styles.loadingText}>{loadingText}</Text>
+          <Text style={styles.loadingText}>{s.translating}</Text>
         </View>
       ) : translatedText ? (
         <>
@@ -59,7 +56,7 @@ export const TranslationResultCard: React.FC<TranslationResultCardProps> = ({
               activeOpacity={0.7}
             >
               <Ionicons name="copy-outline" size={18} color="#6b7280" />
-              <Text style={styles.actionLabel}>Copy</Text>
+              <Text style={styles.actionLabel}>{s.copy}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -78,13 +75,13 @@ export const TranslationResultCard: React.FC<TranslationResultCardProps> = ({
                   isSpeaking && { color: '#dc2626' },
                 ]}
               >
-                {isSpeaking ? 'Stop' : 'Listen'}
+                {isSpeaking ? s.stop : s.listen}
               </Text>
             </TouchableOpacity>
           </View>
         </>
       ) : (
-        <Text style={styles.placeholder}>{placeholderText}</Text>
+        <Text style={styles.placeholder}>{s.translationPlaceholder}</Text>
       )}
     </View>
   );

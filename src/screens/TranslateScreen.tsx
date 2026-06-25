@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslationStore } from '../store/translationStore';
+import { useModelStore } from '../store/modelStore';
 import { AppConstants } from '../core/constants';
 import { LanguageSelector } from '../components/LanguageSelector';
 import { TextInputCard } from '../components/TextInputCard';
@@ -46,6 +47,11 @@ export const TranslateScreen: React.FC<TranslateScreenProps> = ({
   } = useTranslationStore();
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Initialize model on mount
+  useEffect(() => {
+    useModelStore.getState().checkInstalledModels();
+  }, []);
 
   // Show error alert
   useEffect(() => {

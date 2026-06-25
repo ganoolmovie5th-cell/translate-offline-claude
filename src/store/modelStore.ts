@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import { ModelType, DownloadStatus, ModelConfig } from '../core/types';
+import { ModelType, DownloadStatus } from '../core/types';
+import { translationService } from '../services/translationService';
 
 interface ModelState {
   activeModel: ModelType | null;
@@ -22,14 +23,16 @@ export const useModelStore = create<ModelState>((set, get) => ({
   errorMessage: null,
 
   checkInstalledModels: async () => {
-    // In production: check if model files exist in app storage
-    // For now, simulate that no models are downloaded
-    // This would use expo-file-system to check file existence
+    // Since we use API-based translation, mark light model as "ready"
+    // immediately so users can start translating without downloading anything.
     set({
-      lightStatus: DownloadStatus.IDLE,
+      lightStatus: DownloadStatus.DOWNLOADED,
       fullStatus: DownloadStatus.IDLE,
-      activeModel: null,
+      activeModel: ModelType.LIGHT,
     });
+
+    // Initialize the translation service
+    await translationService.loadModel();
   },
 
   downloadModel: async (type: ModelType) => {
@@ -44,11 +47,13 @@ export const useModelStore = create<ModelState>((set, get) => ({
       } as any);
 
       // Simulate download progress
-      // In production: use expo-file-system downloadAsync with progress callback
       for (let i = 0; i <= 10; i++) {
-        await new Promise((resolve) => setTimeout(resolve, 200));
+        await new Promise((resolve) => setTimeout(resolve, 150));
         set({ downloadProgress: i / 10 });
       }
+
+      // Load the translation service
+      await translationService.loadModel();
 
       set({
         [statusKey]: DownloadStatus.DOWNLOADED,
@@ -66,7 +71,6 @@ export const useModelStore = create<ModelState>((set, get) => ({
   },
 
   deleteModel: async (type: ModelType) => {
-    // In production: delete file from expo-file-system
     const statusKey = type === ModelType.LIGHT ? 'lightStatus' : 'fullStatus';
     const { activeModel } = get();
 

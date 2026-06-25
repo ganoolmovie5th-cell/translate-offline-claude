@@ -3,10 +3,10 @@ import { TranslationError } from '../core/errors';
 import { AppConstants } from '../core/constants';
 
 /**
- * Translation service.
+ * Translation service using Google Translate (free endpoint, no API key).
  *
- * Uses MyMemory Translation API (free, no API key needed, 5000 chars/day).
- * This provides real translations while the on-device model is not yet integrated.
+ * Uses the same endpoint that translate.google.com uses internally.
+ * Provides accurate EN↔ID translations.
  *
  * In production, replace with on-device TFLite/ONNX model for true offline support.
  */
@@ -31,7 +31,7 @@ class TranslationService {
         ? text.substring(0, AppConstants.maxInputChars)
         : text;
 
-    const translatedText = await this.translateWithAPI(input, source, target);
+    const translatedText = await this.translateWithGoogle(input, source, target);
 
     return {
       sourceText: input,
@@ -41,24 +41,20 @@ class TranslationService {
     };
   }
 
-  private async translateWithAPI(
+  private async translateWithGoogle(
     text: string,
     source: Language,
     target: Language
   ): Promise<string> {
-    const sourceLang = source === Language.EN ? 'en' : 'id';
-    const targetLang = target === Language.EN ? 'en' : 'id';
-    const langPair = `${sourceLang}|${targetLang}`;
+    const sl = source === Language.EN ? 'en' : 'id';
+    const tl = target === Language.EN ? 'en' : 'id';
 
     try {
-      const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${langPair}`;
+      const url =
+        `https://translate.googleapis.com/translate_a/single` +
+        `?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURIComponent(text)}`;
 
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await fetch(url);
 
       if (!response.ok) {
         throw new Error(`API returned status ${response.status}`);
@@ -66,41 +62,36 @@ class TranslationService {
 
       const data = await response.json();
 
-      if (data.responseStatus === 200 && data.responseData?.translatedText) {
-        let result = data.responseData.translatedText as string;
+      // Google returns nested arrays: [[["translated text","source text",...],...],...]
+      // We need to concatenate all translated segments
+      if (Array.isArray(data) && Array.isArray(data[0])) {
+        const translated = data[0]
+          .filter((segment: any) => segment && segment[0])
+          .map((segment: any) => segment[0])
+          .join('');
 
-        // MyMemory sometimes returns HTML entities, decode them
-        result = this.decodeHtmlEntities(result);
-
-        return result;
+        if (translated) {
+          return translated;
+        }
       }
 
-      // Fallback if API response is unexpected
-      throw new Error(data.responseDetails || 'Translation failed');
+      throw new Error('Unexpected API response format');
     } catch (error: any) {
       // If network fails, use basic offline dictionary as fallback
       const fallback = this.offlineFallback(text, source, target);
       if (fallback) return fallback;
 
       throw new TranslationError(
-        `Translation failed: ${error.message || 'Network error'}. Check your internet connection.`
+        error.message?.includes('Network')
+          ? 'No internet connection. Only basic words available offline.'
+          : `Translation failed: ${error.message || 'Unknown error'}`
       );
     }
   }
 
-  private decodeHtmlEntities(text: string): string {
-    return text
-      .replace(/&amp;/g, '&')
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .replace(/&quot;/g, '"')
-      .replace(/&#39;/g, "'")
-      .replace(/&apos;/g, "'");
-  }
-
   /**
    * Basic offline dictionary fallback when network is unavailable.
-   * Returns null if word not found.
+   * Returns null if word not found in dictionary.
    */
   private offlineFallback(
     text: string,
@@ -155,32 +146,6 @@ class TranslationService {
     today: 'hari ini',
     tomorrow: 'besok',
     yesterday: 'kemarin',
-    beautiful: 'cantik',
-    big: 'besar',
-    small: 'kecil',
-    good: 'bagus',
-    bad: 'buruk',
-    happy: 'senang',
-    sad: 'sedih',
-    house: 'rumah',
-    car: 'mobil',
-    book: 'buku',
-    friend: 'teman',
-    family: 'keluarga',
-    mother: 'ibu',
-    father: 'ayah',
-    child: 'anak',
-    love: 'cinta',
-    work: 'kerja',
-    school: 'sekolah',
-    hospital: 'rumah sakit',
-    money: 'uang',
-    time: 'waktu',
-    day: 'hari',
-    night: 'malam',
-    morning: 'pagi',
-    hot: 'panas',
-    cold: 'dingin',
   };
 
   private idToEnDict: Record<string, string> = {
@@ -192,7 +157,6 @@ class TranslationService {
     'selamat malam': 'good night',
     'terima kasih': 'thank you',
     'apa kabar': 'how are you',
-    'baik-baik saja': "i'm fine",
     ya: 'yes',
     tidak: 'no',
     tolong: 'please',
@@ -203,7 +167,6 @@ class TranslationService {
     'sampai jumpa': 'see you',
     'aku cinta kamu': 'i love you',
     'siapa namamu': 'what is your name',
-    'nama saya': 'my name is',
     air: 'water',
     makanan: 'food',
     makan: 'eat',
@@ -220,32 +183,6 @@ class TranslationService {
     'hari ini': 'today',
     besok: 'tomorrow',
     kemarin: 'yesterday',
-    cantik: 'beautiful',
-    besar: 'big',
-    kecil: 'small',
-    bagus: 'good',
-    buruk: 'bad',
-    senang: 'happy',
-    sedih: 'sad',
-    rumah: 'house',
-    mobil: 'car',
-    buku: 'book',
-    teman: 'friend',
-    keluarga: 'family',
-    ibu: 'mother',
-    ayah: 'father',
-    anak: 'child',
-    cinta: 'love',
-    kerja: 'work',
-    sekolah: 'school',
-    'rumah sakit': 'hospital',
-    uang: 'money',
-    waktu: 'time',
-    hari: 'day',
-    malam: 'night',
-    pagi: 'morning',
-    panas: 'hot',
-    dingin: 'cold',
   };
 
   get modelLoaded(): boolean {

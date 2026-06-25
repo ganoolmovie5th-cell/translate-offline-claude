@@ -15,6 +15,7 @@ interface TranslationResultCardProps {
   isSpeaking: boolean;
   onCopy: () => void;
   onSpeak: () => void;
+  targetLanguage: string;
 }
 
 export const TranslationResultCard: React.FC<TranslationResultCardProps> = ({
@@ -23,6 +24,7 @@ export const TranslationResultCard: React.FC<TranslationResultCardProps> = ({
   isSpeaking,
   onCopy,
   onSpeak,
+  targetLanguage,
 }) => {
   const handleCopy = async () => {
     if (translatedText) {
@@ -31,12 +33,19 @@ export const TranslationResultCard: React.FC<TranslationResultCardProps> = ({
     }
   };
 
+  const loadingText =
+    targetLanguage === 'id' ? 'Menerjemahkan...' : 'Translating...';
+  const placeholderText =
+    targetLanguage === 'id'
+      ? 'Terjemahan akan muncul di sini'
+      : 'Translation will appear here';
+
   return (
     <View style={styles.card}>
       {isLoading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="small" color="#0d9488" />
-          <Text style={styles.loadingText}>Translating...</Text>
+          <Text style={styles.loadingText}>{loadingText}</Text>
         </View>
       ) : translatedText ? (
         <>
@@ -75,7 +84,7 @@ export const TranslationResultCard: React.FC<TranslationResultCardProps> = ({
           </View>
         </>
       ) : (
-        <Text style={styles.placeholder}>Translation will appear here</Text>
+        <Text style={styles.placeholder}>{placeholderText}</Text>
       )}
     </View>
   );

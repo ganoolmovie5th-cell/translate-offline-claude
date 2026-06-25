@@ -144,6 +144,7 @@ export const TranslateScreen: React.FC<TranslateScreenProps> = ({
             isListening={isListening}
             partialSttResult={partialSttResult}
             onMicPress={handleMicPress}
+            sourceLanguage={sourceLanguage}
           />
 
           <View style={styles.spacer} />
@@ -155,6 +156,7 @@ export const TranslateScreen: React.FC<TranslateScreenProps> = ({
             isSpeaking={isSpeaking}
             onCopy={handleCopy}
             onSpeak={handleSpeak}
+            targetLanguage={targetLanguage}
           />
         </ScrollView>
       </KeyboardAvoidingView>

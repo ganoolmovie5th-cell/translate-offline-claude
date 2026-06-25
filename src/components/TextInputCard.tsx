@@ -9,6 +9,7 @@ interface TextInputCardProps {
   isListening: boolean;
   partialSttResult: string;
   onMicPress: () => void;
+  sourceLanguage: string;
 }
 
 export const TextInputCard: React.FC<TextInputCardProps> = ({
@@ -17,10 +18,16 @@ export const TextInputCard: React.FC<TextInputCardProps> = ({
   isListening,
   partialSttResult,
   onMicPress,
+  sourceLanguage,
 }) => {
+  const idlePlaceholder =
+    sourceLanguage === 'id' ? 'Ketik atau bicara...' : 'Type or speak...';
+  const listeningPlaceholder =
+    sourceLanguage === 'id' ? 'Mendengarkan...' : 'Listening...';
+
   const placeholder = isListening
-    ? partialSttResult || 'Listening...'
-    : 'Type or speak...';
+    ? partialSttResult || listeningPlaceholder
+    : idlePlaceholder;
 
   return (
     <View style={styles.card}>

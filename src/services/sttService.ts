@@ -1,4 +1,4 @@
-import { Language, LanguageConfig } from '../core/types';
+import { Language } from '../core/types';
 import { SttError } from '../core/errors';
 
 type SttCallbacks = {

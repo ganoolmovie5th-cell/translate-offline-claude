@@ -1,4 +1,4 @@
-import { Language, LanguageConfig, TranslationResult } from '../core/types';
+import { Language, TranslationResult } from '../core/types';
 import { TranslationError } from '../core/errors';
 import { AppConstants } from '../core/constants';
 

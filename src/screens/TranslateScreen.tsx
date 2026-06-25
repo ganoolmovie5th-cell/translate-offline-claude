@@ -73,6 +73,9 @@ export const TranslateScreen: React.FC<TranslateScreenProps> = ({
         debounceRef.current = setTimeout(() => {
           translateText(text);
         }, AppConstants.debounceMs);
+      } else {
+        // Clear result when input is empty
+        useTranslationStore.setState({ result: null });
       }
     },
     [setInputText, translateText]
@@ -95,8 +98,10 @@ export const TranslateScreen: React.FC<TranslateScreenProps> = ({
   }, [isSpeaking, speakResult, stopSpeaking]);
 
   const handleCopy = useCallback(() => {
-    // Clipboard handled inside TranslationResultCard
-    // Just show feedback here if needed
+    // Feedback handled via Alert
+    Alert.alert('Copied', 'Translation copied to clipboard', [
+      { text: 'OK' },
+    ]);
   }, []);
 
   return (

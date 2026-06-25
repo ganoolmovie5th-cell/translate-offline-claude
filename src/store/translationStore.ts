@@ -83,11 +83,14 @@ export const useTranslationStore = create<TranslationState>((set, get) => ({
       targetLanguage: sourceLanguage,
       inputText: newInput,
       result: null,
+      isTranslating: false,
     });
 
-    // Auto-translate after swap if there's text
+    // Auto-translate after swap if there's text (use setTimeout to let state settle)
     if (newInput.trim()) {
-      get().translateText(newInput);
+      setTimeout(() => {
+        get().translateText(newInput);
+      }, 50);
     }
   },
 

@@ -26,15 +26,10 @@ class TranslationService {
       throw new TranslationError('Input text is empty');
     }
 
-    const input =
-      text.length > AppConstants.maxInputChars
-        ? text.substring(0, AppConstants.maxInputChars)
-        : text;
-
-    const translatedText = await this.translateWithGoogle(input, source, target);
+    const translatedText = await this.translateWithGoogle(text, source, target);
 
     return {
-      sourceText: input,
+      sourceText: text,
       translatedText,
       sourceLanguage: source,
       targetLanguage: target,
@@ -48,6 +43,58 @@ class TranslationService {
   ): Promise<string> {
     const sl = source === Language.EN ? 'en' : 'id';
     const tl = target === Language.EN ? 'en' : 'id';
+
+    // Google Translate API has ~5000 char limit per request
+    // Split long text into chunks and translate each
+    const CHUNK_SIZE = 4500;
+
+    if (text.length <= CHUNK_SIZE) {
+      return this.translateChunk(text, sl, tl);
+    }
+
+    // Split by sentences/paragraphs for long text
+    const chunks = this.splitIntoChunks(text, CHUNK_SIZE);
+    const results: string[] = [];
+
+    for (const chunk of chunks) {
+      const translated = await this.translateChunk(chunk, sl, tl);
+      results.push(translated);
+    }
+
+    return results.join('');
+  }
+
+  private splitIntoChunks(text: string, maxSize: number): string[] {
+    const chunks: string[] = [];
+    let remaining = text;
+
+    while (remaining.length > 0) {
+      if (remaining.length <= maxSize) {
+        chunks.push(remaining);
+        break;
+      }
+
+      // Try to split at sentence boundary
+      let splitAt = remaining.lastIndexOf('. ', maxSize);
+      if (splitAt === -1 || splitAt < maxSize * 0.5) {
+        splitAt = remaining.lastIndexOf(' ', maxSize);
+      }
+      if (splitAt === -1 || splitAt < maxSize * 0.3) {
+        splitAt = maxSize;
+      }
+
+      chunks.push(remaining.substring(0, splitAt + 1));
+      remaining = remaining.substring(splitAt + 1);
+    }
+
+    return chunks;
+  }
+
+  private async translateChunk(
+    text: string,
+    sl: string,
+    tl: string
+  ): Promise<string> {
 
     try {
       const url =
@@ -78,7 +125,9 @@ class TranslationService {
       throw new Error('Unexpected API response format');
     } catch (error: any) {
       // If network fails, use basic offline dictionary as fallback
-      const fallback = this.offlineFallback(text, source, target);
+      const sourceLang = sl === 'en' ? Language.EN : Language.ID;
+      const targetLang = tl === 'en' ? Language.EN : Language.ID;
+      const fallback = this.offlineFallback(text, sourceLang, targetLang);
       if (fallback) return fallback;
 
       throw new TranslationError(

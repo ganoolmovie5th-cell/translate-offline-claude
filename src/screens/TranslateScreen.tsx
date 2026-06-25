@@ -5,6 +5,7 @@ import {
   SafeAreaView,
   StatusBar,
   Text,
+  Image,
   TouchableOpacity,
   Alert,
   KeyboardAvoidingView,
@@ -108,7 +109,13 @@ export const TranslateScreen: React.FC<TranslateScreenProps> = ({
 
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>TransLite</Text>
+        <View style={styles.logoRow}>
+          <Image
+            source={require('../../assets/icon.png')}
+            style={styles.logo}
+          />
+          <Text style={styles.title}>TransLite</Text>
+        </View>
         <TouchableOpacity
           onPress={onOpenSettings}
           style={styles.settingsButton}
@@ -172,12 +179,22 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#f3f4f6',
   },
+  logoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  logo: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+  },
   title: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '700',
     color: '#0d9488',
   },

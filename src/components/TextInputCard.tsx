@@ -1,7 +1,6 @@
 import React from 'react';
-import { View, TextInput, StyleSheet, Text } from 'react-native';
+import { View, TextInput, StyleSheet } from 'react-native';
 import { VoiceButton } from './VoiceButton';
-import { AppConstants } from '../core/constants';
 import { Language } from '../core/types';
 import { t } from '../core/i18n';
 
@@ -36,13 +35,9 @@ export const TextInputCard: React.FC<TextInputCardProps> = ({
         placeholder={placeholder}
         placeholderTextColor="#9ca3af"
         multiline
-        maxLength={AppConstants.maxInputChars}
         editable={!isListening}
       />
       <View style={styles.footer}>
-        <Text style={styles.charCount}>
-          {value.length}/{AppConstants.maxInputChars}
-        </Text>
         <VoiceButton isListening={isListening} onPress={onMicPress} />
       </View>
     </View>
@@ -70,12 +65,8 @@ const styles = StyleSheet.create({
   },
   footer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
     alignItems: 'center',
     marginTop: 8,
-  },
-  charCount: {
-    fontSize: 12,
-    color: '#9ca3af',
   },
 });

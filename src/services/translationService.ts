@@ -56,12 +56,21 @@ class TranslationService {
     const chunks = this.splitIntoChunks(text, CHUNK_SIZE);
     const results: string[] = [];
 
-    for (const chunk of chunks) {
-      const translated = await this.translateChunk(chunk, sl, tl);
+    for (let i = 0; i < chunks.length; i++) {
+      // Space out multi-chunk requests to avoid bursting the free endpoint's
+      // rate limit (which triggers HTTP 429).
+      if (i > 0) {
+        await this.delay(300);
+      }
+      const translated = await this.translateChunk(chunks[i], sl, tl);
       results.push(translated);
     }
 
     return results.join('');
+  }
+
+  private delay(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   private splitIntoChunks(text: string, maxSize: number): string[] {
@@ -90,52 +99,116 @@ class TranslationService {
     return chunks;
   }
 
+  // Alternate Google endpoints. The free service rate-limits per host/client,
+  // so rotating gives a chunk a second chance before we surface an error.
+  private buildEndpoints(text: string, sl: string, tl: string): string[] {
+    const q = encodeURIComponent(text);
+    return [
+      `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${q}`,
+      `https://clients5.google.com/translate_a/t?client=dict-chrome-ex&sl=${sl}&tl=${tl}&q=${q}`,
+    ];
+  }
+
   private async translateChunk(
     text: string,
     sl: string,
     tl: string
   ): Promise<string> {
+    const endpoints = this.buildEndpoints(text, sl, tl);
+    const MAX_ATTEMPTS = 3;
+    let lastError: any = null;
 
-    try {
-      const url =
-        `https://translate.googleapis.com/translate_a/single` +
-        `?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURIComponent(text)}`;
+    for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+      // Cycle through the available endpoints across attempts.
+      const url = endpoints[attempt % endpoints.length];
 
-      const response = await fetch(url);
+      try {
+        const response = await fetch(url, {
+          headers: {
+            // A browser-like User-Agent makes the unauthenticated endpoint far
+            // less likely to throttle us with HTTP 429.
+            'User-Agent':
+              'Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 ' +
+              '(KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36',
+            Accept: '*/*',
+          },
+        });
 
-      if (!response.ok) {
-        throw new Error(`API returned status ${response.status}`);
-      }
+        // 429 (rate limited) and 5xx are transient: back off and retry.
+        if (response.status === 429 || response.status >= 500) {
+          lastError = new Error(`API returned status ${response.status}`);
+          if (attempt < MAX_ATTEMPTS - 1) {
+            // Exponential backoff with jitter: ~500ms, ~1000ms, ...
+            const backoff = 500 * Math.pow(2, attempt) + Math.random() * 250;
+            await this.delay(backoff);
+            continue;
+          }
+          throw lastError;
+        }
 
-      const data = await response.json();
+        if (!response.ok) {
+          throw new Error(`API returned status ${response.status}`);
+        }
 
-      // Google returns nested arrays: [[["translated text","source text",...],...],...]
-      // We need to concatenate all translated segments
-      if (Array.isArray(data) && Array.isArray(data[0])) {
-        const translated = data[0]
-          .filter((segment: any) => segment && segment[0])
-          .map((segment: any) => segment[0])
-          .join('');
-
+        const translated = this.parseResponse(await response.json());
         if (translated) {
           return translated;
         }
+        throw new Error('Unexpected API response format');
+      } catch (error: any) {
+        lastError = error;
+        // Retry transient failures; otherwise break to fallback handling.
+        const message = String(error?.message ?? '');
+        const isTransient =
+          message.includes('429') ||
+          message.includes('Network') ||
+          message.includes('timeout') ||
+          /status 5\d\d/.test(message);
+        if (isTransient && attempt < MAX_ATTEMPTS - 1) {
+          const backoff = 500 * Math.pow(2, attempt) + Math.random() * 250;
+          await this.delay(backoff);
+          continue;
+        }
+        break;
       }
+    }
 
-      throw new Error('Unexpected API response format');
-    } catch (error: any) {
-      // If network fails, use basic offline dictionary as fallback
-      const sourceLang = sl === 'en' ? Language.EN : Language.ID;
-      const targetLang = tl === 'en' ? Language.EN : Language.ID;
-      const fallback = this.offlineFallback(text, sourceLang, targetLang);
-      if (fallback) return fallback;
+    // All attempts exhausted: try offline dictionary, then surface an error.
+    const sourceLang = sl === 'en' ? Language.EN : Language.ID;
+    const targetLang = tl === 'en' ? Language.EN : Language.ID;
+    const fallback = this.offlineFallback(text, sourceLang, targetLang);
+    if (fallback) return fallback;
 
+    const message = String(lastError?.message ?? '');
+    if (message.includes('429')) {
       throw new TranslationError(
-        error.message?.includes('Network')
-          ? 'No internet connection. Only basic words available offline.'
-          : `Translation failed: ${error.message || 'Unknown error'}`
+        'Translation service is busy right now (rate limited). Please wait a moment and try again.'
       );
     }
+    throw new TranslationError(
+      message.includes('Network')
+        ? 'No internet connection. Only basic words available offline.'
+        : `Translation failed: ${lastError?.message || 'Unknown error'}`
+    );
+  }
+
+  /**
+   * Parses the nested-array response shared by both Google endpoints.
+   * Format: [[["translated text","source text",...],...],...]
+   */
+  private parseResponse(data: any): string | null {
+    if (Array.isArray(data) && Array.isArray(data[0])) {
+      const translated = data[0]
+        .filter((segment: any) => segment && segment[0])
+        .map((segment: any) => segment[0])
+        .join('');
+      return translated || null;
+    }
+    // clients5 dict-chrome-ex sometimes returns ["text","lang"]
+    if (Array.isArray(data) && typeof data[0] === 'string') {
+      return data[0] || null;
+    }
+    return null;
   }
 
   /**

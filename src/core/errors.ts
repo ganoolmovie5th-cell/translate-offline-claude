@@ -5,24 +5,10 @@ export class AppError extends Error {
   }
 }
 
-export class ModelError extends AppError {
-  constructor(message: string) {
-    super(message);
-    this.name = 'ModelError';
-  }
-}
-
 export class TranslationError extends AppError {
   constructor(message: string) {
     super(message);
     this.name = 'TranslationError';
-  }
-}
-
-export class SttError extends AppError {
-  constructor(message: string) {
-    super(message);
-    this.name = 'SttError';
   }
 }
 

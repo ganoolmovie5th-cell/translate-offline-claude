@@ -1,5 +1,4 @@
 import { Language } from '../core/types';
-import { SttError } from '../core/errors';
 
 type SttCallbacks = {
   onResult: (text: string) => void;

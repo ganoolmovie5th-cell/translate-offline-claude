@@ -76,3 +76,13 @@ npx expo start            # Run in Expo Go
 - Commit messages: `feat:`, `fix:`, `refactor:`, `chore:`
 - Push to `main` branch
 - Keep commits focused (one concern per commit)
+
+## Pembersihan Kode / Ponytail Audit (Juni 2026)
+
+Dead code dihapus (verifikasi `tsc --noEmit` lolos):
+- 5 barrel `index.ts` (`src/core`, `src/services`, `src/store`, `src/components`, `src/screens`) — 0 import, semua memakai path langsung. Jangan tambah barrel lagi kecuali benar-benar dipakai.
+- Error class `ModelError` & `SttError` tak pernah dilempar → dihapus dari `core/errors.ts` (+ import mati di `sttService.ts`). Sisa: `AppError`, `TranslationError`, `TtsError`.
+- Konstanta tak terpakai di `core/constants.ts`: `maxInputChars` (kontradiksi "no character limit"), `inferenceTimeoutMs`, `sttSilenceTimeoutMs` → dihapus. Sisa: `appName`, `debounceMs`, `defaultSpeechRate`.
+- Import `AppConstants` mati di `translationService.ts` → dihapus.
+
+**Belum disentuh (butuh keputusan produk):** subsistem "download model" di `modelStore.ts`/`ModelConfig`/screen terkait adalah simulasi (terjemahan selalu lewat Google API). Masih tampil di UI, jadi dipertahankan.

@@ -1,6 +1,5 @@
 import { Language, TranslationResult } from '../core/types';
 import { TranslationError } from '../core/errors';
-import { AppConstants } from '../core/constants';
 
 /**
  * Translation service using Google Translate (free endpoint, no API key).

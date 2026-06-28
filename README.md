@@ -122,3 +122,13 @@ To make translation fully offline, replace `translationService.ts` with an on-de
 ## License
 
 MIT
+
+## Pembersihan Kode / Ponytail Audit (Juni 2026)
+
+Hapus dead code tanpa menyentuh fungsionalitas, i18n, atau pesan error ramah-pengguna. Verifikasi `tsc --noEmit` lolos:
+- Hapus 5 barrel `index.ts` (`core`/`services`/`store`/`components`/`screens`) — 0 import (semua pakai path langsung).
+- Hapus error class tak terpakai `ModelError` & `SttError` (+ import-nya di `sttService.ts`).
+- Hapus konstanta tak terpakai di `core/constants.ts`: `maxInputChars`, `inferenceTimeoutMs`, `sttSilenceTimeoutMs`.
+- Hapus import `AppConstants` yang tak dipakai di `translationService.ts`.
+
+Catatan: subsistem "model offline" (UI download tersimulasi) sengaja DIBIARKAN karena masih tampil di UI; perlu keputusan produk sebelum dihapus.

@@ -55,6 +55,11 @@ export const useModelStore = create<ModelState>()(
             errorMessage: null,
           } as any);
 
+          // ponytail: progress di-simulasi (placeholder UI untuk model on-device).
+          // Ceiling: tidak ada model nyata yang diunduh — terjemahan tetap lewat
+          // Google API (butuh internet). Upgrade path: ganti loop ini dengan unduhan
+          // file model TFLite nyata + engine inferensi on-device, lalu set progress
+          // dari byte ter-unduh sebenarnya.
           // Simulate download progress
           for (let i = 0; i <= 10; i++) {
             await new Promise((resolve) => setTimeout(resolve, 150));

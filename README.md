@@ -132,3 +132,7 @@ Hapus dead code tanpa menyentuh fungsionalitas, i18n, atau pesan error ramah-pen
 - Hapus import `AppConstants` yang tak dipakai di `translationService.ts`.
 
 Catatan: subsistem "model offline" (UI download tersimulasi) sengaja DIBIARKAN karena masih tampil di UI; perlu keputusan produk sebelum dihapus.
+
+### Update: subsistem model dipertahankan (Juni 2026)
+
+Layar pengaturan model & store-nya **dipertahankan** sebagai scaffolding untuk roadmap on-device (bukan dihapus). Diberi komentar `ponytail:` di `modelStore.ts` (`downloadModel`) dan `translationService.ts` (`loadModel`) yang menjelaskan bahwa progress/loadModel masih simulasi (terjemahan tetap via Google API) beserta jalur upgrade ke model TFLite nyata.

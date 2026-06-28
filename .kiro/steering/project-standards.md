@@ -86,3 +86,11 @@ Dead code dihapus (verifikasi `tsc --noEmit` lolos):
 - Import `AppConstants` mati di `translationService.ts` → dihapus.
 
 **Belum disentuh (butuh keputusan produk):** subsistem "download model" di `modelStore.ts`/`ModelConfig`/screen terkait adalah simulasi (terjemahan selalu lewat Google API). Masih tampil di UI, jadi dipertahankan.
+
+### Keputusan subsistem "model offline" (Juni 2026)
+
+Keputusan: **dipertahankan** sebagai scaffolding roadmap on-device (opsi B), bukan dihapus. Diberi penanda `ponytail:` yang menyebut ceiling + upgrade path:
+- `src/store/modelStore.ts` (`downloadModel`): progress di-simulasi; tidak ada model nyata, terjemahan tetap via Google API. Upgrade path: unduh model TFLite nyata + set progress dari byte ter-unduh.
+- `src/services/translationService.ts` (`loadModel`): no-op, proxy ke Google API; dipertahankan agar kontrak `modelStore` utuh. Upgrade path: muat model TFLite/ONNX dari `_modelPath`.
+
+Jangan hapus `ModelSettingsScreen`/`modelStore` tanpa keputusan produk baru — ini placeholder yang disengaja, bukan dead code.

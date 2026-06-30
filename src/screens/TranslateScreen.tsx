@@ -6,43 +6,30 @@ import {
   StatusBar,
   Text,
   Image,
-  TouchableOpacity,
   Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useTranslationStore } from '../store/translationStore';
-import { useModelStore } from '../store/modelStore';
 import { AppConstants } from '../core/constants';
 import { t } from '../core/i18n';
 import { LanguageSelector } from '../components/LanguageSelector';
 import { TextInputCard } from '../components/TextInputCard';
 import { TranslationResultCard } from '../components/TranslationResultCard';
 
-interface TranslateScreenProps {
-  onOpenSettings: () => void;
-}
-
-export const TranslateScreen: React.FC<TranslateScreenProps> = ({
-  onOpenSettings,
-}) => {
+export const TranslateScreen: React.FC = () => {
   const {
     sourceLanguage,
     targetLanguage,
     inputText,
     result,
     isTranslating,
-    isListening,
     isSpeaking,
-    partialSttResult,
     error,
     setInputText,
     translateText,
     swapLanguages,
-    startListening,
-    stopListening,
     speakResult,
     stopSpeaking,
     clearError,
@@ -50,11 +37,6 @@ export const TranslateScreen: React.FC<TranslateScreenProps> = ({
 
   const s = t(sourceLanguage);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Initialize model on mount
-  useEffect(() => {
-    useModelStore.getState().checkInstalledModels();
-  }, []);
 
   // Show error alert
   useEffect(() => {
@@ -83,14 +65,6 @@ export const TranslateScreen: React.FC<TranslateScreenProps> = ({
     [setInputText, translateText]
   );
 
-  const handleMicPress = useCallback(() => {
-    if (isListening) {
-      stopListening();
-    } else {
-      startListening();
-    }
-  }, [isListening, startListening, stopListening]);
-
   const handleSpeak = useCallback(() => {
     if (isSpeaking) {
       stopSpeaking();
@@ -116,13 +90,6 @@ export const TranslateScreen: React.FC<TranslateScreenProps> = ({
           />
           <Text style={styles.title}>TransLite</Text>
         </View>
-        <TouchableOpacity
-          onPress={onOpenSettings}
-          style={styles.settingsButton}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="settings-outline" size={22} color="#6b7280" />
-        </TouchableOpacity>
       </View>
 
       <KeyboardAvoidingView
@@ -146,9 +113,6 @@ export const TranslateScreen: React.FC<TranslateScreenProps> = ({
           <TextInputCard
             value={inputText}
             onChangeText={handleTextChange}
-            isListening={isListening}
-            partialSttResult={partialSttResult}
-            onMicPress={handleMicPress}
             sourceLanguage={sourceLanguage}
           />
 
@@ -197,9 +161,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     color: '#0d9488',
-  },
-  settingsButton: {
-    padding: 8,
   },
   content: {
     flex: 1,

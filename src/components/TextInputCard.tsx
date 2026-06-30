@@ -1,30 +1,20 @@
 import React from 'react';
 import { View, TextInput, StyleSheet } from 'react-native';
-import { VoiceButton } from './VoiceButton';
 import { Language } from '../core/types';
 import { t } from '../core/i18n';
 
 interface TextInputCardProps {
   value: string;
   onChangeText: (text: string) => void;
-  isListening: boolean;
-  partialSttResult: string;
-  onMicPress: () => void;
   sourceLanguage: Language;
 }
 
 export const TextInputCard: React.FC<TextInputCardProps> = ({
   value,
   onChangeText,
-  isListening,
-  partialSttResult,
-  onMicPress,
   sourceLanguage,
 }) => {
   const s = t(sourceLanguage);
-  const placeholder = isListening
-    ? partialSttResult || s.listening
-    : s.typeOrSpeak;
 
   return (
     <View style={styles.card}>
@@ -32,14 +22,10 @@ export const TextInputCard: React.FC<TextInputCardProps> = ({
         style={styles.input}
         value={value}
         onChangeText={onChangeText}
-        placeholder={placeholder}
+        placeholder={s.typeOrSpeak}
         placeholderTextColor="#9ca3af"
         multiline
-        editable={!isListening}
       />
-      <View style={styles.footer}>
-        <VoiceButton isListening={isListening} onPress={onMicPress} />
-      </View>
     </View>
   );
 };

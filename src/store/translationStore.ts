@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { Language, TranslationResult } from '../core/types';
 import { translationService } from '../services/translationService';
-import { sttService } from '../services/sttService';
 import { ttsService } from '../services/ttsService';
 
 interface TranslationState {
@@ -15,11 +14,7 @@ interface TranslationState {
 
   // Loading states
   isTranslating: boolean;
-  isListening: boolean;
   isSpeaking: boolean;
-
-  // STT
-  partialSttResult: string;
 
   // Error
   error: string | null;
@@ -28,8 +23,6 @@ interface TranslationState {
   setInputText: (text: string) => void;
   translateText: (text: string) => Promise<void>;
   swapLanguages: () => void;
-  startListening: () => Promise<void>;
-  stopListening: () => Promise<void>;
   speakResult: () => Promise<void>;
   stopSpeaking: () => Promise<void>;
   clearError: () => void;
@@ -41,9 +34,7 @@ export const useTranslationStore = create<TranslationState>((set, get) => ({
   inputText: '',
   result: null,
   isTranslating: false,
-  isListening: false,
   isSpeaking: false,
-  partialSttResult: '',
   error: null,
 
   setInputText: (text: string) => {
@@ -92,44 +83,6 @@ export const useTranslationStore = create<TranslationState>((set, get) => ({
         get().translateText(newInput);
       }, 50);
     }
-  },
-
-  startListening: async () => {
-    set({ isListening: true, partialSttResult: '', error: null });
-
-    try {
-      const { sourceLanguage } = get();
-      await sttService.startListening(sourceLanguage, {
-        onResult: (text: string) => {
-          set({
-            inputText: text,
-            isListening: false,
-            partialSttResult: '',
-          });
-          // Auto-translate after speech recognized
-          get().translateText(text);
-        },
-        onPartial: (text: string) => {
-          set({ partialSttResult: text });
-        },
-        onError: (error: string) => {
-          set({
-            isListening: false,
-            error: `Speech recognition failed: ${error}`,
-          });
-        },
-      });
-    } catch (e: any) {
-      set({
-        isListening: false,
-        error: e.message || 'Failed to start listening',
-      });
-    }
-  },
-
-  stopListening: async () => {
-    await sttService.stopListening();
-    set({ isListening: false });
   },
 
   speakResult: async () => {

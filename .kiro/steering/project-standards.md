@@ -11,7 +11,7 @@ TransLite is a React Native (Expo SDK 54) translator app for English ↔ Indones
 - **State Management:** Zustand with `persist` middleware + AsyncStorage
 - **Translation API:** Google Translate (`translate.googleapis.com/translate_a/single`)
 - **TTS:** `expo-speech`
-- **STT:** `expo-speech-recognition` (Dev Build only, stub in Expo Go)
+- **STT:** Removed — non-functional in Expo Go, no Dev Build support planned
 
 ## Key Design Decisions
 
@@ -23,7 +23,7 @@ TransLite is a React Native (Expo SDK 54) translator app for English ↔ Indones
 ### Translation Service
 - Uses free Google Translate endpoint (no API key)
 - Long text automatically split into chunks at sentence boundaries (~4500 chars each)
-- Offline fallback dictionary for common words when network unavailable
+- Requires internet — shows clear error when offline
 - No character limit on input
 
 ### i18n
@@ -33,19 +33,18 @@ TransLite is a React Native (Expo SDK 54) translator app for English ↔ Indones
 - When adding new UI text, always add both EN and ID versions in i18n.ts
 
 ### State Persistence
-- Model store persisted via `zustand/middleware/persist` + AsyncStorage
-- Only persist: `activeModel`, `lightStatus`, `fullStatus`
-- Transient state (progress, errors) NOT persisted
+- Translation store via Zustand
+- No model store — on-device model feature removed
 
 ## Code Conventions
 
 ### File Organization
 ```
 src/core/       — Types, constants, errors, i18n (no React)
-src/services/   — Business logic, API calls (no React)
-src/store/      — Zustand stores (no React components)
-src/components/ — Reusable UI components
-src/screens/    — Screen-level components
+src/services/   — translationService (Google API), ttsService
+src/store/      — translationStore (Zustand)
+src/components/ — LanguageSelector, TextInputCard, TranslationResultCard
+src/screens/    — TranslateScreen (single screen)
 ```
 
 ### Naming
@@ -77,20 +76,12 @@ npx expo start            # Run in Expo Go
 - Push to `main` branch
 - Keep commits focused (one concern per commit)
 
-## Pembersihan Kode / Ponytail Audit (Juni 2026)
+## Ponytail Audit — Juli 2026
 
-Dead code dihapus (verifikasi `tsc --noEmit` lolos):
-- 5 barrel `index.ts` (`src/core`, `src/services`, `src/store`, `src/components`, `src/screens`) — 0 import, semua memakai path langsung. Jangan tambah barrel lagi kecuali benar-benar dipakai.
-- Error class `ModelError` & `SttError` tak pernah dilempar → dihapus dari `core/errors.ts` (+ import mati di `sttService.ts`). Sisa: `AppError`, `TranslationError`, `TtsError`.
-- Konstanta tak terpakai di `core/constants.ts`: `maxInputChars` (kontradiksi "no character limit"), `inferenceTimeoutMs`, `sttSilenceTimeoutMs` → dihapus. Sisa: `appName`, `debounceMs`, `defaultSpeechRate`.
-- Import `AppConstants` mati di `translationService.ts` → dihapus.
+Fake features dihapus:
+- `ModelSettingsScreen`, `modelStore.ts` — simulasi download, tidak ada model nyata
+- `sttService.ts`, `VoiceButton` — STT stub, tidak berfungsi di Expo Go
+- Offline dictionary (80 kata) — bukan offline translation sungguhan
+- `ModelType`, `ModelInfo`, `ModelConfig`, `DownloadStatus` dari `types.ts`
 
-**Belum disentuh (butuh keputusan produk):** subsistem "download model" di `modelStore.ts`/`ModelConfig`/screen terkait adalah simulasi (terjemahan selalu lewat Google API). Masih tampil di UI, jadi dipertahankan.
-
-### Keputusan subsistem "model offline" (Juni 2026)
-
-Keputusan: **dipertahankan** sebagai scaffolding roadmap on-device (opsi B), bukan dihapus. Diberi penanda `ponytail:` yang menyebut ceiling + upgrade path:
-- `src/store/modelStore.ts` (`downloadModel`): progress di-simulasi; tidak ada model nyata, terjemahan tetap via Google API. Upgrade path: unduh model TFLite nyata + set progress dari byte ter-unduh.
-- `src/services/translationService.ts` (`loadModel`): no-op, proxy ke Google API; dipertahankan agar kontrak `modelStore` utuh. Upgrade path: muat model TFLite/ONNX dari `_modelPath`.
-
-Jangan hapus `ModelSettingsScreen`/`modelStore` tanpa keputusan produk baru — ini placeholder yang disengaja, bukan dead code.
+App sekarang: satu screen (`TranslateScreen`), satu store (`translationStore`), dua service (`translationService`, `ttsService`).

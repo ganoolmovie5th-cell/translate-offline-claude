@@ -1,6 +1,6 @@
 # TransLite
 
-Offline-ready English ↔ Indonesian translator mobile app with voice support.
+English ↔ Indonesian translator mobile app.
 
 Built with React Native (Expo SDK 54) — runs on Android & iOS via Expo Go.
 
@@ -9,9 +9,7 @@ Built with React Native (Expo SDK 54) — runs on Android & iOS via Expo Go.
 - **Real translation** — Powered by Google Translate API (accurate EN↔ID)
 - **Unlimited length** — Translates any text length, auto-splits long content
 - **Text-to-Speech** — Listen to translations (expo-speech, works offline)
-- **Voice input** — Speech-to-text (requires Development Build)
 - **Bilingual UI** — All interface text follows source language selection
-- **Model manager** — Persisted model choice (survives app restart)
 - **Copy to clipboard** — One tap to copy translation results
 - **Swap languages** — Animated language swap with auto-retranslate
 
@@ -47,7 +45,6 @@ Scan QR code with **Expo Go** app on your phone.
 | State | Zustand + AsyncStorage persist |
 | Translation | Google Translate API (free, no key) |
 | TTS | expo-speech |
-| STT | expo-speech-recognition (Dev Build only) |
 | Icons | @expo/vector-icons (Ionicons) |
 | Clipboard | expo-clipboard |
 
@@ -63,18 +60,14 @@ src/
 ├── components/
 │   ├── LanguageSelector.tsx
 │   ├── TextInputCard.tsx
-│   ├── TranslationResultCard.tsx
-│   └── VoiceButton.tsx
+│   └── TranslationResultCard.tsx
 ├── screens/
-│   ├── TranslateScreen.tsx
-│   └── ModelSettingsScreen.tsx
+│   └── TranslateScreen.tsx
 ├── services/
 │   ├── translationService.ts  # Google Translate integration
-│   ├── ttsService.ts          # Text-to-speech
-│   └── sttService.ts          # Speech-to-text (stub for Expo Go)
+│   └── ttsService.ts          # Text-to-speech
 └── store/
-    ├── translationStore.ts    # Translation state
-    └── modelStore.ts          # Model persistence
+    └── translationStore.ts    # Translation state
 ```
 
 ## How Translation Works
@@ -83,16 +76,14 @@ src/
 2. After 800ms debounce, text is sent to Google Translate API
 3. Long text (>4500 chars) is split at sentence boundaries
 4. Each chunk translated separately, results joined
-5. If offline, falls back to built-in dictionary (~60 common words)
+5. If API fails, shows clear error message (requires internet)
 
 ## Offline Support
 
-| Feature | Expo Go | Dev Build |
-|---------|---------|-----------|
-| Translation (API) | Needs internet | Needs internet |
-| Translation (dictionary fallback) | Offline (limited) | Offline (limited) |
-| TTS (text-to-speech) | Offline | Offline |
-| STT (voice input) | Not available | Offline |
+| Feature | Status |
+|---------|--------|
+| Translation | Requires internet (Google Translate API) |
+| TTS (text-to-speech) | Works offline (expo-speech) |
 
 ## i18n (Internationalization)
 
@@ -103,25 +94,19 @@ All UI text automatically follows the **source language** selection:
 
 ## Development
 
-### Voice Input (STT)
-
-STT requires a Development Build (not compatible with Expo Go):
-
-```bash
-npx expo prebuild
-npx expo run:android   # or run:ios
-```
-
-### Full Offline Translation
-
-To make translation fully offline, replace `translationService.ts` with an on-device ML model:
-- Convert MarianMT or NLLB model to TFLite/ONNX
-- Use a native module to run inference
-- Requires Development Build
-
 ## License
 
 MIT
+
+## Ponytail Audit — Juli 2026
+
+Fake offline features dihapus:
+- `ModelSettingsScreen` + `modelStore.ts` — progress download di-simulasi, tidak ada model nyata
+- `sttService.ts` + `VoiceButton` — STT langsung throw error di Expo Go, tidak berfungsi
+- Offline dictionary 80 kata — bukan offline translation sungguhan, menyesatkan
+- `ModelType`, `ModelInfo`, `ModelConfig`, `DownloadStatus` dari `types.ts`
+
+App sekarang: 1 screen, 1 store, 2 service, translation selalu via Google API.
 
 ## Pembersihan Kode / Ponytail Audit (Juni 2026)
 

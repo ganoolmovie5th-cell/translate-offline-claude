@@ -1,5 +1,4 @@
 import { Language, TranslationResult } from '../core/types';
-import { TranslationError } from '../core/errors';
 
 /**
  * Translation service using Google Translate (free endpoint, no API key).
@@ -25,13 +24,12 @@ class TranslationService {
     target: Language
   ): Promise<TranslationResult> {
     if (text.trim().length === 0) {
-      throw new TranslationError('Input text is empty');
+      throw new Error('Input text is empty');
     }
 
     const translatedText = await this.translateWithGoogle(text, source, target);
 
     return {
-      sourceText: text,
       translatedText,
       sourceLanguage: source,
       targetLanguage: target,
@@ -178,11 +176,11 @@ class TranslationService {
     // All attempts exhausted.
     const message = String(lastError?.message ?? '');
     if (message.includes('429')) {
-      throw new TranslationError(
+      throw new Error(
         'Translation service is busy right now (rate limited). Please wait a moment and try again.'
       );
     }
-    throw new TranslationError(
+    throw new Error(
       message.includes('Network')
         ? 'Translation failed. Check your internet connection.'
         : `Translation failed: ${lastError?.message || 'Unknown error'}`
@@ -208,13 +206,6 @@ class TranslationService {
     return null;
   }
 
-  get modelLoaded(): boolean {
-    return this.isLoaded;
-  }
-
-  dispose(): void {
-    this.isLoaded = false;
-  }
 }
 
 export const translationService = new TranslationService();

@@ -1,7 +1,6 @@
 import * as Speech from 'expo-speech';
 import { Language, LanguageConfig } from '../core/types';
 import { AppConstants } from '../core/constants';
-import { TtsError } from '../core/errors';
 
 /**
  * Text-to-Speech service using expo-speech.
@@ -27,7 +26,7 @@ class TtsService {
           },
           onError: (error) => {
             this.speaking = false;
-            reject(new TtsError(`TTS error: ${error}`));
+            reject(new Error(`TTS error: ${error}`));
           },
           onStopped: () => {
             this.speaking = false;
@@ -37,8 +36,8 @@ class TtsService {
       });
     } catch (e) {
       this.speaking = false;
-      if (e instanceof TtsError) throw e;
-      throw new TtsError(`Failed to speak: ${e}`);
+      if (e instanceof Error) throw e;
+      throw new Error(`Failed to speak: ${e}`);
     }
   }
 
@@ -47,14 +46,6 @@ class TtsService {
     await Speech.stop();
   }
 
-  get isSpeaking(): boolean {
-    return this.speaking;
-  }
-
-  async isAvailable(): Promise<boolean> {
-    // expo-speech is always available on native
-    return true;
-  }
 }
 
 export const ttsService = new TtsService();

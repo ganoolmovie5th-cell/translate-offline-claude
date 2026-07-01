@@ -129,3 +129,8 @@ Hapus wrapper error & dead members. Verifikasi: `tsc --noEmit` lolos.
 - Hapus 11 kunci i18n mati di `src/core/i18n.ts` (UI download model: `listening`, `languageModels`, `lightModel`, `fullModel`, `lightDescription`, `fullDescription`, `downloadInfo`, `download`, `delete`, `retry`, `modelSettings`)
 - Hapus field `sttLocale` dari `LanguageConfig` di `src/core/types.ts` (STT dinonaktifkan); hapus field `sourceText` dari `TranslationResult` (tidak pernah dipakai consumer)
 - Hapus member tak terpakai di service: `modelLoaded` getter, `dispose()` (`translationService`); `isSpeaking` getter, `isAvailable()` (`ttsService`)
+
+### Audit Lanjutan 2 (Juli 2026)
+
+- `src/services/translationService.ts`: hapus field `isLoaded` (di-set tapi tidak pernah dibaca); inline `delay()` helper → `new Promise(r => setTimeout(r, ms))` langsung di 3 call site; hapus private method `delay()`
+- `src/components/TextInputCard.tsx`: hapus entry `footer` dari StyleSheet (defined tapi tidak pernah dirujuk di JSX)

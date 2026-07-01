@@ -121,3 +121,11 @@ Catatan: subsistem "model offline" (UI download tersimulasi) sengaja DIBIARKAN k
 ### Update: subsistem model dipertahankan (Juni 2026)
 
 Layar pengaturan model & store-nya **dipertahankan** sebagai scaffolding untuk roadmap on-device (bukan dihapus). Diberi komentar `ponytail:` di `modelStore.ts` (`downloadModel`) dan `translationService.ts` (`loadModel`) yang menjelaskan bahwa progress/loadModel masih simulasi (terjemahan tetap via Google API) beserta jalur upgrade ke model TFLite nyata.
+
+### Audit Lanjutan (Juli 2026)
+
+Hapus wrapper error & dead members. Verifikasi: `tsc --noEmit` lolos.
+- Hapus `src/core/errors.ts` seluruhnya — `TranslationError` & `TtsError` hanya wrap `Error` biasa tanpa menambah perilaku; diganti `new Error()` di semua call site
+- Hapus 11 kunci i18n mati di `src/core/i18n.ts` (UI download model: `listening`, `languageModels`, `lightModel`, `fullModel`, `lightDescription`, `fullDescription`, `downloadInfo`, `download`, `delete`, `retry`, `modelSettings`)
+- Hapus field `sttLocale` dari `LanguageConfig` di `src/core/types.ts` (STT dinonaktifkan); hapus field `sourceText` dari `TranslationResult` (tidak pernah dipakai consumer)
+- Hapus member tak terpakai di service: `modelLoaded` getter, `dispose()` (`translationService`); `isSpeaking` getter, `isAvailable()` (`ttsService`)

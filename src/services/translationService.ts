@@ -9,14 +9,10 @@ import { Language, TranslationResult } from '../core/types';
  * In production, replace with on-device TFLite/ONNX model for true offline support.
  */
 class TranslationService {
-  private isLoaded = false;
-
   // ponytail: no-op. Ceiling: tidak ada model on-device yang dimuat — service
   // hanya proxy ke Google API. Dipertahankan agar kontrak modelStore tetap utuh
   // untuk roadmap on-device. Upgrade path: muat model TFLite/ONNX dari _modelPath.
-  async loadModel(_modelPath?: string): Promise<void> {
-    this.isLoaded = true;
-  }
+  async loadModel(_modelPath?: string): Promise<void> {}
 
   async translate(
     text: string,
@@ -60,17 +56,13 @@ class TranslationService {
       // Space out multi-chunk requests to avoid bursting the free endpoint's
       // rate limit (which triggers HTTP 429).
       if (i > 0) {
-        await this.delay(300);
+        await new Promise(r => setTimeout(r, 300));
       }
       const translated = await this.translateChunk(chunks[i], sl, tl);
       results.push(translated);
     }
 
     return results.join('');
-  }
-
-  private delay(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   private splitIntoChunks(text: string, maxSize: number): string[] {
@@ -140,7 +132,7 @@ class TranslationService {
           if (attempt < MAX_ATTEMPTS - 1) {
             // Exponential backoff with jitter: ~500ms, ~1000ms, ...
             const backoff = 500 * Math.pow(2, attempt) + Math.random() * 250;
-            await this.delay(backoff);
+            await new Promise(r => setTimeout(r, backoff));
             continue;
           }
           throw lastError;

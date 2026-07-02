@@ -134,3 +134,10 @@ Hapus wrapper error & dead members. Verifikasi: `tsc --noEmit` lolos.
 
 - `src/services/translationService.ts`: hapus field `isLoaded` (di-set tapi tidak pernah dibaca); inline `delay()` helper → `new Promise(r => setTimeout(r, ms))` langsung di 3 call site; hapus private method `delay()`
 - `src/components/TextInputCard.tsx`: hapus entry `footer` dari StyleSheet (defined tapi tidak pernah dirujuk di JSX)
+
+### Audit Lanjutan 3 (Juli 2026)
+
+- `package.json`: hapus `@react-native-async-storage/async-storage` (zero src imports)
+- `src/core/i18n.ts`: hapus key `swap` dari locale EN dan ID (zero i18n reads)
+- `src/services/ttsService.ts`: hapus field `private speaking` (write-only, state ada di Zustand)
+- `src/services/translationService.ts`: `String(error?.message ?? '')` → `error?.message ?? ''` di 2 call site

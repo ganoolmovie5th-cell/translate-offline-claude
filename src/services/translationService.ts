@@ -150,7 +150,7 @@ class TranslationService {
       } catch (error: any) {
         lastError = error;
         // Retry transient failures; otherwise break to fallback handling.
-        const message = String(error?.message ?? '');
+        const message = error?.message ?? '';
         const isTransient =
           message.includes('429') ||
           message.includes('Network') ||

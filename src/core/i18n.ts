@@ -20,9 +20,6 @@ const strings = {
     copied: 'Copied',
     copiedMessage: 'Translation copied to clipboard',
 
-    // Language selector
-    swap: 'Swap languages',
-
     // Errors
     error: 'Error',
     ok: 'OK',
@@ -41,9 +38,6 @@ const strings = {
     stop: 'Berhenti',
     copied: 'Disalin',
     copiedMessage: 'Terjemahan disalin ke papan klip',
-
-    // Language selector
-    swap: 'Tukar bahasa',
 
     // Errors
     error: 'Kesalahan',

@@ -7,42 +7,28 @@ import { AppConstants } from '../core/constants';
  * Works in Expo Go and Development Builds.
  */
 class TtsService {
-  private speaking = false;
-
   async speak(text: string, language: Language): Promise<void> {
     if (!text.trim()) return;
 
     try {
-      this.speaking = true;
       const locale = LanguageConfig[language].locale;
 
       await new Promise<void>((resolve, reject) => {
         Speech.speak(text, {
           language: locale,
           rate: AppConstants.defaultSpeechRate,
-          onDone: () => {
-            this.speaking = false;
-            resolve();
-          },
-          onError: (error) => {
-            this.speaking = false;
-            reject(new Error(`TTS error: ${error}`));
-          },
-          onStopped: () => {
-            this.speaking = false;
-            resolve();
-          },
+          onDone: () => resolve(),
+          onError: (error) => reject(new Error(`TTS error: ${error}`)),
+          onStopped: () => resolve(),
         });
       });
     } catch (e) {
-      this.speaking = false;
       if (e instanceof Error) throw e;
       throw new Error(`Failed to speak: ${e}`);
     }
   }
 
   async stop(): Promise<void> {
-    this.speaking = false;
     await Speech.stop();
   }
 

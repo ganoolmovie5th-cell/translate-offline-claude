@@ -40,28 +40,90 @@ class TranslationService {
     const sl = source === Language.EN ? 'en' : 'id';
     const tl = target === Language.EN ? 'en' : 'id';
 
-    // Google Translate API has ~5000 char limit per request
-    // Split long text into chunks and translate each
-    const CHUNK_SIZE = 4500;
+    // Preserve formatting: split by paragraphs, translate each, rejoin.
+    // This keeps bullet points, numbered lists, and paragraph structure intact.
+    const paragraphs = text.split(/(\n\s*\n|\n(?=[-•●▪▸►]\s)|\n(?=\d+[.)]\s))/);
+    
+    if (paragraphs.length <= 1 || text.length <= 4500) {
+      // Short text or single paragraph — translate as one chunk
+      return this.translateStructured(text, sl, tl);
+    }
 
+    // Translate paragraph by paragraph to preserve structure
+    const results: string[] = [];
+    for (let i = 0; i < paragraphs.length; i++) {
+      const para = paragraphs[i];
+      // Separators (newlines between paragraphs) — keep as-is
+      if (/^\n/.test(para) && para.trim().length === 0) {
+        results.push(para);
+        continue;
+      }
+      if (para.trim().length === 0) {
+        results.push(para);
+        continue;
+      }
+      if (i > 0 && results.length > 0) {
+        await new Promise(r => setTimeout(r, 200));
+      }
+      const translated = await this.translateStructured(para, sl, tl);
+      results.push(translated);
+    }
+    return results.join('');
+  }
+
+  /**
+   * Translate a single paragraph, preserving inline formatting like
+   * bullet prefixes and numbering.
+   */
+  private async translateStructured(text: string, sl: string, tl: string): Promise<string> {
+    // Detect and preserve line-level formatting (bullets, numbers)
+    const lines = text.split('\n');
+    const hasFormatting = lines.some(l => /^(\s*[-•●▪▸►]\s|\s*\d+[.)]\s)/.test(l));
+
+    if (!hasFormatting || lines.length <= 1) {
+      // No special formatting — use chunked translation
+      return this.translateChunked(text, sl, tl);
+    }
+
+    // Translate formatted lines individually to preserve prefixes
+    const results: string[] = [];
+    for (const line of lines) {
+      if (line.trim().length === 0) {
+        results.push(line);
+        continue;
+      }
+      // Extract prefix (bullet/number) and content
+      const match = line.match(/^(\s*(?:[-•●▪▸►]|\d+[.)])\s+)(.*)/);
+      if (match) {
+        const [, prefix, content] = match;
+        if (content.trim()) {
+          const translated = await this.translateChunked(content, sl, tl);
+          results.push(prefix + translated);
+        } else {
+          results.push(line);
+        }
+      } else {
+        const translated = await this.translateChunked(line, sl, tl);
+        results.push(translated);
+      }
+    }
+    return results.join('\n');
+  }
+
+  private async translateChunked(text: string, sl: string, tl: string): Promise<string> {
+    const CHUNK_SIZE = 4500;
     if (text.length <= CHUNK_SIZE) {
       return this.translateChunk(text, sl, tl);
     }
-
-    // Split by sentences/paragraphs for long text
     const chunks = this.splitIntoChunks(text, CHUNK_SIZE);
     const results: string[] = [];
-
     for (let i = 0; i < chunks.length; i++) {
-      // Space out multi-chunk requests to avoid bursting the free endpoint's
-      // rate limit (which triggers HTTP 429).
       if (i > 0) {
         await new Promise(r => setTimeout(r, 300));
       }
       const translated = await this.translateChunk(chunks[i], sl, tl);
       results.push(translated);
     }
-
     return results.join('');
   }
 
@@ -158,7 +220,7 @@ class TranslationService {
           /status 5\d\d/.test(message);
         if (isTransient && attempt < MAX_ATTEMPTS - 1) {
           const backoff = 500 * Math.pow(2, attempt) + Math.random() * 250;
-          await this.delay(backoff);
+          await new Promise(r => setTimeout(r, backoff));
           continue;
         }
         break;

@@ -12,6 +12,7 @@ Built with React Native (Expo SDK 54) — runs on Android & iOS via Expo Go.
 - **Bilingual UI** — All interface text follows source language selection
 - **Copy to clipboard** — One tap to copy translation results
 - **Swap languages** — Animated language swap with auto-retranslate
+- **Text formatting** — Preserves bullet points, numbered lists, and paragraph structure during translation
 
 ## Screenshots
 

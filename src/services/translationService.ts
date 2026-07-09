@@ -9,11 +9,6 @@ import { Language, TranslationResult } from '../core/types';
  * In production, replace with on-device TFLite/ONNX model for true offline support.
  */
 class TranslationService {
-  // ponytail: no-op. Ceiling: tidak ada model on-device yang dimuat — service
-  // hanya proxy ke Google API. Dipertahankan agar kontrak modelStore tetap utuh
-  // untuk roadmap on-device. Upgrade path: muat model TFLite/ONNX dari _modelPath.
-  async loadModel(_modelPath?: string): Promise<void> {}
-
   async translate(
     text: string,
     source: Language,

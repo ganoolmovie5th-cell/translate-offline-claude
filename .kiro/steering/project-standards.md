@@ -40,11 +40,12 @@ TransLite is a React Native (Expo SDK 54) translator app for English ↔ Indones
 
 ### File Organization
 ```
-src/core/       — Types, constants, errors, i18n (no React)
+src/core/       — Types, constants, i18n (no React)
+src/data/       — phrasebook.ts, pronunciation.ts (static data)
 src/services/   — translationService (Google API), ttsService
 src/store/      — translationStore (Zustand)
 src/components/ — LanguageSelector, TextInputCard, TranslationResultCard
-src/screens/    — TranslateScreen (single screen)
+src/screens/    — TranslateScreen, ConversationScreen, PhrasebookScreen, CameraScreen, PronunciationScreen
 ```
 
 ### Naming
@@ -85,3 +86,33 @@ Fake features dihapus:
 - `ModelType`, `ModelInfo`, `ModelConfig`, `DownloadStatus` dari `types.ts`
 
 App sekarang: satu screen (`TranslateScreen`), satu store (`translationStore`), dua service (`translationService`, `ttsService`).
+
+## Fitur Baru (Juli 2026)
+
+### Navigation (App.tsx)
+- `App.tsx` sekarang pakai custom bottom tab bar (`useState<Screen>` pattern)
+- 5 tab: 🔤 Terjemah, 💬 Percakapan, 📖 Frasa, 📷 Kamera, 🗣️ Pelafalan
+- Tanpa external navigation library (Expo Go compatible)
+
+### Conversation Mode (`src/screens/ConversationScreen.tsx`)
+- Chat-style interface dengan bubble alternating (kiri = EN, kanan = ID)
+- User ketik → otomatis diterjemahkan → tampil sebagai bubble pair
+- Tap bubble untuk TTS, toggle bahasa di atas, clear button
+- State percakapan hanya di component (tidak di-persist)
+
+### Phrasebook (`src/screens/PhrasebookScreen.tsx`)
+- Data: `src/data/phrasebook.ts` — 6 kategori × 10 frasa (60 total)
+- Kategori: Sapaan, Perjalanan, Makanan, Belanja, Darurat, Bisnis
+- Search bar, category tabs horizontal, tap to copy, speaker button TTS
+
+### Camera Translation (`src/screens/CameraScreen.tsx`)
+- Expo Go compatible (tanpa OCR native module)
+- Ambil foto via expo-image-picker sebagai referensi visual
+- User ketik teks yang terlihat di foto → translate via translationService
+- Practical "camera-assisted" approach
+
+### Pronunciation Guide (`src/screens/PronunciationScreen.tsx`)
+- Data: `src/data/pronunciation.ts` — 3 kategori, 40 entries
+- Kategori: Vokal (10), Konsonan (10), Kata Umum (20)
+- Setiap entry: word, IPA, phonetic guide (English speaker), meaning
+- Search + speaker button per kata (TTS via ttsService)

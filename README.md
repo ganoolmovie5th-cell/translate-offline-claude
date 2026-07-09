@@ -13,6 +13,10 @@ Built with React Native (Expo SDK 54) — runs on Android & iOS via Expo Go.
 - **Copy to clipboard** — One tap to copy translation results
 - **Swap languages** — Animated language swap with auto-retranslate
 - **Text formatting** — Preserves bullet points, numbered lists, and paragraph structure during translation
+- **💬 Conversation Mode** — Chat-style interface, alternating bubbles EN/ID, tap to hear TTS
+- **📖 Phrasebook** — 60 frasa umum di 6 kategori (Sapaan, Perjalanan, Makanan, Belanja, Darurat, Bisnis)
+- **📷 Camera Translation** — Ambil foto teks sebagai referensi, ketik untuk diterjemahkan
+- **🗣️ Pronunciation Guide** — 40 kata Indonesia dengan IPA, fonetik, dan TTS (3 kategori)
 
 ## Screenshots
 
@@ -55,15 +59,21 @@ Scan QR code with **Expo Go** app on your phone.
 src/
 ├── core/
 │   ├── constants.ts      # App config
-│   ├── errors.ts         # Error classes
-│   ├── i18n.ts           # UI translations (EN/ID)
+│   ├── i18n.ts           # UI translations (EN/ID) — all 5 screens
 │   └── types.ts          # TypeScript types & enums
+├── data/
+│   ├── phrasebook.ts     # 6 categories × 10 phrases (60 total)
+│   └── pronunciation.ts  # 3 categories, 40 entries with IPA
 ├── components/
 │   ├── LanguageSelector.tsx
 │   ├── TextInputCard.tsx
 │   └── TranslationResultCard.tsx
 ├── screens/
-│   └── TranslateScreen.tsx
+│   ├── TranslateScreen.tsx       # Main translator
+│   ├── ConversationScreen.tsx    # Chat-style translation
+│   ├── PhrasebookScreen.tsx      # Categorized common phrases
+│   ├── CameraScreen.tsx          # Photo-assisted translation
+│   └── PronunciationScreen.tsx   # IPA + phonetic guide
 ├── services/
 │   ├── translationService.ts  # Google Translate integration
 │   └── ttsService.ts          # Text-to-speech

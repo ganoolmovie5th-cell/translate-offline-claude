@@ -2,6 +2,7 @@ import React from 'react';
 import { View, TextInput, StyleSheet } from 'react-native';
 import { Language } from '../core/types';
 import { t } from '../core/i18n';
+import { VoiceButton } from './VoiceButton';
 
 interface TextInputCardProps {
   value: string;
@@ -18,14 +19,17 @@ export const TextInputCard: React.FC<TextInputCardProps> = ({
 
   return (
     <View style={styles.card}>
-      <TextInput
-        style={styles.input}
-        value={value}
-        onChangeText={onChangeText}
-        placeholder={s.typeOrSpeak}
-        placeholderTextColor="#9ca3af"
-        multiline
-      />
+      <View style={styles.inputRow}>
+        <TextInput
+          style={styles.input}
+          value={value}
+          onChangeText={onChangeText}
+          placeholder={s.typeOrSpeak}
+          placeholderTextColor="#9ca3af"
+          multiline
+        />
+        <VoiceButton text={value} language={sourceLanguage} />
+      </View>
     </View>
   );
 };
@@ -43,7 +47,13 @@ const styles = StyleSheet.create({
     elevation: 2,
     minHeight: 120,
   },
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+  },
   input: {
+    flex: 1,
     fontSize: 16,
     color: '#1f2937',
     minHeight: 60,

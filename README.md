@@ -8,6 +8,7 @@ Built with React Native (Expo SDK 54) — runs on Android & iOS via Expo Go.
 
 - **Real translation** — Powered by Google Translate API (accurate EN↔ID)
 - **Unlimited length** — Translates any text length, auto-splits long content
+- **Voice Button** — Tap mic to hear typed text spoken aloud (expo-speech, works offline)
 - **Text-to-Speech** — Listen to translations (expo-speech, works offline)
 - **Bilingual UI** — All interface text follows source language selection
 - **Copy to clipboard** — One tap to copy translation results

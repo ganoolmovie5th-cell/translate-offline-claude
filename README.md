@@ -120,6 +120,15 @@ Fake offline features dihapus:
 
 App sekarang: 1 screen, 1 store, 2 service, translation selalu via Google API.
 
+## Update Juli 2026
+
+### Voice Button Feature
+- **Voice Button** — Tap mic icon in input card to hear typed text aloud (expo-speech)
+- Works offline, respects source language selection (English/Indonesia)
+- Audio permission request on first tap
+- Active state indicator while speaking
+- Added `expo-audio ~15.0.0` to dependencies for permission handling
+
 ## Pembersihan Kode / Ponytail Audit (Juni 2026)
 
 Hapus dead code tanpa menyentuh fungsionalitas, i18n, atau pesan error ramah-pengguna. Verifikasi `tsc --noEmit` lolos:

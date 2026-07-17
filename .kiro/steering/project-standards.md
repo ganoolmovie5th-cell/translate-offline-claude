@@ -116,3 +116,13 @@ App sekarang: satu screen (`TranslateScreen`), satu store (`translationStore`), 
 - Kategori: Vokal (10), Konsonan (10), Kata Umum (20)
 - Setiap entry: word, IPA, phonetic guide (English speaker), meaning
 - Search + speaker button per kata (TTS via ttsService)
+
+## Update Juli 2026
+
+### Voice Button (Input Card)
+- New component: `src/components/VoiceButton.tsx`
+- Mic icon button in `TextInputCard` — tap to speak typed text aloud
+- Uses `expo-speech` + `expo-audio` for permissions
+- Button shows active state (blue highlight) while speaking
+- Respects source language (EN/ID) for pronunciation
+- Audio permissions requested on first tap (user-friendly)

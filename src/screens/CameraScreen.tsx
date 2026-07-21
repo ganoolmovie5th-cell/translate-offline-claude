@@ -37,7 +37,7 @@ export const CameraScreen: React.FC = () => {
     try {
       // Read image as base64
       const base64 = await FileSystem.readAsStringAsync(uri, {
-        encoding: FileSystem.EncodingType.Base64,
+        encoding: 'base64',
       });
       const imageData = `data:image/jpg;base64,${base64}`;
 

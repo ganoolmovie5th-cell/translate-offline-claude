@@ -10,11 +10,8 @@ import {
   Image,
   KeyboardAvoidingView,
   Platform,
-  ActivityIndicator,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import * as FileSystem from 'expo-file-system/legacy';
-import Tesseract from 'tesseract.js';
 import { Language } from '../core/types';
 import { t } from '../core/i18n';
 import { translationService } from '../services/translationService';
@@ -24,36 +21,10 @@ export const CameraScreen: React.FC = () => {
   const [inputText, setInputText] = useState('');
   const [translatedText, setTranslatedText] = useState<string | null>(null);
   const [isTranslating, setIsTranslating] = useState(false);
-  const [isExtracting, setIsExtracting] = useState(false);
-  const [extractionError, setExtractionError] = useState<string | null>(null);
   const [sourceLang] = useState<Language>(Language.ID);
   const [targetLang] = useState<Language>(Language.EN);
 
   const s = t(Language.ID);
-
-  const extractTextFromPhoto = useCallback(async (uri: string) => {
-    setIsExtracting(true);
-    setExtractionError(null);
-    try {
-      // Read image as base64
-      const base64 = await FileSystem.readAsStringAsync(uri, {
-        encoding: 'base64',
-      });
-      const imageData = `data:image/jpg;base64,${base64}`;
-
-      // Extract text using Tesseract OCR
-      const { data: { text } } = await Tesseract.recognize(imageData, 'ind+eng', {
-        logger: () => {}, // silent
-      });
-
-      setInputText(text.trim() || '');
-    } catch (error) {
-      setExtractionError('Failed to extract text from photo');
-      console.error('OCR error:', error);
-    } finally {
-      setIsExtracting(false);
-    }
-  }, []);
 
   const handleTakePhoto = useCallback(async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -65,13 +36,9 @@ export const CameraScreen: React.FC = () => {
     });
 
     if (!result.canceled && result.assets[0]) {
-      const uri = result.assets[0].uri;
-      setPhotoUri(uri);
-      setInputText('');
-      setTranslatedText(null);
-      await extractTextFromPhoto(uri);
+      setPhotoUri(result.assets[0].uri);
     }
-  }, [extractTextFromPhoto]);
+  }, []);
 
   const handleTranslate = useCallback(async () => {
     const text = inputText.trim();
@@ -101,7 +68,7 @@ export const CameraScreen: React.FC = () => {
           {/* Description */}
           <View style={styles.descCard}>
             <Text style={styles.descIcon}>📷</Text>
-            <Text style={styles.descText}>Take photo, extract text automatically with OCR, then translate</Text>
+            <Text style={styles.descText}>{s.cameraDescription}</Text>
           </View>
 
           {/* Photo area */}
@@ -112,9 +79,9 @@ export const CameraScreen: React.FC = () => {
                 style={styles.retakeBtn}
                 onPress={handleTakePhoto}
                 accessibilityRole="button"
-                accessibilityLabel="Take another photo"
+                accessibilityLabel={s.takePhoto}
               >
-                <Text style={styles.retakeText}>📷 Take another</Text>
+                <Text style={styles.retakeText}>📷 {s.takePhoto}</Text>
               </TouchableOpacity>
             </View>
           ) : (
@@ -123,36 +90,21 @@ export const CameraScreen: React.FC = () => {
               onPress={handleTakePhoto}
               activeOpacity={0.7}
               accessibilityRole="button"
-              accessibilityLabel="Take photo"
+              accessibilityLabel={s.takePhoto}
             >
               <Text style={styles.placeholderIcon}>📷</Text>
-              <Text style={styles.placeholderText}>Take photo</Text>
-              <Text style={styles.placeholderHint}>Tap to start camera</Text>
+              <Text style={styles.placeholderText}>{s.takePhoto}</Text>
+              <Text style={styles.placeholderHint}>{s.noPhotoYet}</Text>
             </TouchableOpacity>
-          )}
-
-          {/* Extraction status */}
-          {isExtracting && (
-            <View style={styles.statusCard}>
-              <ActivityIndicator color="#0d9488" size="small" />
-              <Text style={styles.statusText}>Extracting text from photo...</Text>
-            </View>
-          )}
-
-          {extractionError && (
-            <View style={[styles.statusCard, styles.errorCard]}>
-              <Text style={styles.errorText}>{extractionError}</Text>
-            </View>
           )}
 
           {/* Text input */}
           <View style={styles.inputCard}>
-            <Text style={styles.inputLabel}>Extracted text (edit if needed):</Text>
             <TextInput
               style={styles.textInput}
               value={inputText}
               onChangeText={setInputText}
-              placeholder="Text will appear here after OCR"
+              placeholder={s.typeTextFromPhoto}
               placeholderTextColor="#9ca3af"
               multiline
               textAlignVertical="top"
@@ -162,10 +114,10 @@ export const CameraScreen: React.FC = () => {
               onPress={handleTranslate}
               disabled={!inputText.trim() || isTranslating}
               accessibilityRole="button"
-              accessibilityLabel="Translate"
+              accessibilityLabel={s.translateButton}
             >
               <Text style={styles.translateBtnText}>
-                {isTranslating ? 'Translating...' : 'Translate'}
+                {isTranslating ? s.translating : s.translateButton}
               </Text>
             </TouchableOpacity>
           </View>
@@ -173,7 +125,7 @@ export const CameraScreen: React.FC = () => {
           {/* Result */}
           {translatedText && (
             <View style={styles.resultCard}>
-              <Text style={styles.resultLabel}>Translation</Text>
+              <Text style={styles.resultLabel}>{s.translationResult}</Text>
               <Text style={styles.resultText}>{translatedText}</Text>
             </View>
           )}
@@ -258,25 +210,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingHorizontal: 32,
   },
-  statusCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#dbeafe',
-    borderRadius: 12,
-    padding: 12,
-    gap: 10,
-  },
-  statusText: {
-    fontSize: 13,
-    color: '#0369a1',
-  },
-  errorCard: {
-    backgroundColor: '#fee2e2',
-  },
-  errorText: {
-    fontSize: 13,
-    color: '#dc2626',
-  },
   inputCard: {
     backgroundColor: '#ffffff',
     borderRadius: 12,
@@ -287,11 +220,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.04,
     shadowRadius: 2,
     elevation: 1,
-  },
-  inputLabel: {
-    fontSize: 12,
-    color: '#6b7280',
-    fontWeight: '500',
   },
   textInput: {
     minHeight: 80,

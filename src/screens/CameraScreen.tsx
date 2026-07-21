@@ -21,8 +21,8 @@ export const CameraScreen: React.FC = () => {
   const [inputText, setInputText] = useState('');
   const [translatedText, setTranslatedText] = useState<string | null>(null);
   const [isTranslating, setIsTranslating] = useState(false);
-  const [sourceLang] = useState<Language>(Language.ID);
-  const [targetLang] = useState<Language>(Language.EN);
+  const [sourceLang] = useState<Language>(Language.EN);
+  const [targetLang] = useState<Language>(Language.ID);
 
   const s = t(Language.ID);
 

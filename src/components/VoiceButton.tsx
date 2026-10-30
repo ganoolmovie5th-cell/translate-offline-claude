@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Speech from 'expo-speech';
-import { Audio } from 'expo-audio';
 import { Language, LanguageConfig } from '../core/types';
 import { t } from '../core/i18n';
 
@@ -23,14 +22,7 @@ export const VoiceButton: React.FC<VoiceButtonProps> = ({ text, language }) => {
 
     setIsLoading(true);
     try {
-      // Request audio permissions
-      const { status } = await Audio.requestPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert(s.error, 'Audio permission denied');
-        return;
-      }
-
-      // Speak the text
+      // Speak the text (TTS via expo-speech — tidak butuh izin audio)
       const locale = LanguageConfig[language as Language].locale;
 
       await Speech.speak(text, {

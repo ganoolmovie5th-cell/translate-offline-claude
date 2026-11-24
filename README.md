@@ -2,7 +2,7 @@
 
 Aplikasi translator English-Indonesian untuk mobile. Terjemahan akurat via Google Translate API, dengan fitur text-to-speech offline, conversation mode, phrasebook, dan pronunciation guide.
 
-**Tech Stack:** React Native · Expo SDK 54 · TypeScript · Zustand · expo-speech
+**Tech Stack:** React Native · Expo SDK 58 · TypeScript · Zustand · expo-speech
 
 ## Features
 

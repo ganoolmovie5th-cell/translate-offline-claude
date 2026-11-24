@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
+  type ScrollViewInstance,
 } from 'react-native';
 import { Language, LanguageConfig } from '../core/types';
 import { t } from '../core/i18n';
@@ -27,7 +28,7 @@ export const ConversationScreen: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const [isTranslating, setIsTranslating] = useState(false);
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<ScrollViewInstance>(null);
 
   const s = t(speakingLang);
   const targetLang = speakingLang === Language.EN ? Language.ID : Language.EN;
